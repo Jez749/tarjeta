@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Eric Gonzalez</title>
+  <title>Tarjeta - Animada</title>
   <style>
   :root { --w:400px }
 
@@ -17,12 +17,11 @@
   }
 
   body {
-  transform: scale(0.8);       /* cambia 0.8 → 0.7, 0.6, etc */
-  transform-origin: top center;
-  width: 100%;
-  height: 100%;
-}
-
+    transform: scale(0.8);
+    transform-origin: top center;
+    width: 100%;
+    height: 100%;
+  }
 
   .wrap{
     padding:12px;
@@ -44,7 +43,6 @@
     transform-style:preserve-3d;
     transition:transform .8s cubic-bezier(.2,.9,.3,1);
     border-radius:12px;
-    /* ❌ QUITADO overflow:hidden (causaba el bug) */
   }
 
   .inner.flipped{
@@ -57,8 +55,6 @@
     width:100%;
     height:100%;
     object-fit:cover;
-
-    /* ✔ Solución: evitar duplicación y bug de Chrome */
     backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
     transform-style:preserve-3d;
@@ -80,6 +76,27 @@
     border-radius:14px;
   }
 
+  /* Botón descarga VCF */
+ .download-btn{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  font-size:17px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:14px;
+  color:#fff;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.download-btn:hover{
+  background:rgba(255,255,255,0.2);
+  transform:translateY(-2px);
+}
+
   .sr-only{
     position:absolute;
     width:1px;
@@ -91,17 +108,17 @@
     white-space:nowrap;
     border:0;
   }
-</style>
-
+  </style>
 </head>
 <body>
   <div class="wrap">
     <div class="flip-card" id="flipCard" role="button" tabindex="0" aria-pressed="false" aria-label="Tarjeta de presentación, tocar para girar">
       <div class="inner" id="inner">
-        <img class="face front" id="frontImg" src="./Tarjeta/Tarjetas/Frente.jpg" alt="Frente de la tarjeta">
-        <img class="face back" id="backImg" src="./Tarjeta/Tarjetas/Reverso.jpg" alt="Reverso de la tarjeta">
+        <img class="face front" id="frontImg" src="./Tarjetas/Frente.jpg" alt="Frente de la tarjeta">
+        <img class="face back" id="backImg" src="./Tarjetas/Reverso.jpg" alt="Reverso de la tarjeta">
       </div>
     </div>
+    <button class="download-btn" id="downloadVcf">Download Contact (.vcf)</button>
   </div>
 
   <p class="sr-only" id="imgStatus" aria-live="polite"></p>
@@ -112,6 +129,7 @@
     const frontImg = document.getElementById('frontImg');
     const backImg = document.getElementById('backImg');
     const imgStatus = document.getElementById('imgStatus');
+    const downloadVcf = document.getElementById('downloadVcf');
 
     // Manejo interacción: click, teclado (Enter/Espacio) y toque
     function toggleFlip(){
@@ -131,7 +149,6 @@
       test.onerror = ()=>{
         imgStatus.textContent = `${name} no encontrada.`;
         console.error(`${name} no encontrada:`, imgEl.src);
-        // fallback SVG inline para visibilidad inmediata
         imgEl.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
           `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="24" fill="#333">${name} no encontrada</text></svg>`
         );
@@ -141,8 +158,38 @@
 
     checkImage(frontImg, 'Frente.jpg');
     checkImage(backImg, 'Reverso.jpg');
+
+    // Función para generar y descargar vCard (.vcf)
+    downloadVcf.addEventListener('click', function(){
+
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    'FN:Eric',
+    'N:Gonzalez;Eric;;;',
+    'ORG:TLC.MX',
+    'TITLE:Director Comercial',
+    'TEL;TYPE=WORK:+524431392264',
+    'EMAIL;TYPE=E-MAIL:e.gonzales@tlc.mx',
+    'URL:https://tlc.mx',
+    'ADR;TYPE=WORK:;;Av. Las Palmas MZ1-LT10;Lazaro Cardenas;Michoacan;60952;Mexico',
+    'NOTE:.',
+    'END:VCARD'
+  ];
+
+  // Ensamblado correcto CRLF sin BOM
+  const vcardText = lines.join('\r\n') + '\r\n';
+
+  const blob = new Blob([vcardText], { type: 'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'Eric.vcf';
+  link.click();
+
+  URL.revokeObjectURL(url);
+    });
   </script>
 </body>
 </html>
-
-
